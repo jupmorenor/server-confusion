@@ -1,0 +1,27 @@
+{
+  "name": "server-confusion",
+  "version": "1.0.0",
+  "description": "Server for the Confusion apps",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jupmorenor/server-confusion.git"
+  },
+  "keywords": [
+    "express"
+  ],
+  "author": "Juanpa Moreno",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jupmorenor/server-confusion/issues"
+  },
+  "homepage": "https://github.com/jupmorenor/server-confusion#readme",
+  "dependencies": {
+    "express": "^4.16.3",
+    "morgan": "^1.9.0"
+  }
+}
