@@ -1,26 +1,55 @@
 const express = require('express');
-const bodyParser = require('body-parser'); 
+const bodyParser = require('body-parser');
+const mongoose = require('mongoose');
+
+const Dishes = require('../models/dishes');
 
 const dishRouter = express.Router();
 dishRouter.use(bodyParser.json());
 
 dishRouter.route('/').all((request, response, next) => {
     response.statusCode = 200;
-    response.setHeader('ContentType', 'text/plain');
+    response.setHeader('ContentType', 'application/json');
     next();
 }).get((request, response, next) => {
-    response.end('Se enviarán todos los platillos.');
+    Dishes.find({}).then((dishes) => {
+        response.json(dishes);
+    }, (err) => {
+        next(err);
+    }).catch((err) => {
+        next(err);
+    });
 }).post((request, response, next) => {
-    response.end('Se agregará un nuevo platillo: ' + request.body.name + ' con descripcion: ' + request.body.description);
+    Dishes.create(request.body).then((dish) => {
+        console.log('Dish creado', dish)
+        response.statusCode = 201;
+        response.json(dish);
+    }, (err) => {
+        next(err);
+    }).catch((err) => {
+        next(err);    
+    });
 }).put((request, response, next) => {
     response.statusCode = 403;
     response.end('PUT no tiene soporte para los platillos');
 }).delete((request, response, next) => {
-    response.end('Se borrarán todos los platillos.');
+    Dishes.deleteMany({}).then((resp) => {
+        response.json(resp);
+    }, (err) => {
+        next(err);
+    }).catch((err) => {
+        next(err);    
+    });
 });
 
 dishRouter.get('/:dishId', (request, response, next) => {
-    response.end('Se enviarán detalles del platillo ' + request.params.dishId);
+    Dishes.findById(request.params.dishId).then((dish) => {
+        response.json(dish);
+    }, (err) => {
+        next(err);
+    }).catch((err) => {
+        next(err);
+    });
 });
 
 dishRouter.post('/:dishId', (request, response, next) => {
@@ -29,12 +58,25 @@ dishRouter.post('/:dishId', (request, response, next) => {
 });
 
 dishRouter.put('/:dishId', (request, response, next) => {
-    response.write('Modificando el platillo: ' + request.params.dishId + '\n');
-    response.end('Se modificará el platillo: ' + request.body.name + ' con descripcion: ' + request.body.description);
+    Dishes.findByIdAndUpdate(request.params.dishId, {
+        $set: request.body,
+    }, {new: true}).then((dish) => {
+        response.json(dish);
+    }, (err) => {
+        next(err);
+    }).catch((err) => {
+        next(err);
+    });
 });
 
 dishRouter.delete('/:dishId', (request, response, next) => {
-    response.end('Borrando platillo ' + request.params.dishId);
+    Dishes.findByIdAndRemove(request.params.dishId).then((resp) => {
+        response.json(resp);
+    }, (err) => {
+        next(err);
+    }).catch((err) => {
+        next(err);    
+    });
 });
 
 module.exports = dishRouter;
