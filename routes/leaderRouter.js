@@ -1,5 +1,7 @@
 const express = require('express');
-const bodyParser = require('body-parser'); 
+const bodyParser = require('body-parser');
+
+const Leaders = require('../models/leaders');
 
 const leaderRouter = express.Router();
 leaderRouter.use(bodyParser.json());
@@ -9,32 +11,65 @@ leaderRouter.route('/').all((request, response, next) => {
     response.setHeader('ContentType', 'text/plain');
     next();
 }).get((request, response, next) => {
-    response.end('Se enviarán todos los lideres.');
+    Leaders.find({}).then((leaders) => {
+        response.json(leaders);
+    }, (err) => {
+        next(err);
+    }).catch((err) => {
+        next(err);
+    });
 }).post((request, response, next) => {
-    response.end('Se agregará un nuevo lider: ' + request.body.name + ' con descripcion: ' + request.body.description);
+    Leaders.create(request.body).then((leader) => {
+        console.log('leader creada', leader)
+        response.statusCode = 201;
+        response.json(leader);
+    }, (err) => {
+        next(err);
+    }).catch((err) => {
+        next(err);
+    });
 }).put((request, response, next) => {
     response.statusCode = 403;
-    response.end('PUT no tiene soporte para los lideres');
+    response.end('PUT no tiene soporte para /leaders');
 }).delete((request, response, next) => {
-    response.end('Se borrarán todos los lideres.');
-});
+    Leaders.deleteMany({}).then((resp) => {
+        response.json(resp);
+    }, (err) => {
+        next(err);
+    }).catch((err) => {
+        next(err);
+    });
+})
 
-leaderRouter.get('/:leaderId', (request, response, next) => {
-    response.end('Se enviarán detalles del lider ' + request.params.leaderId);
-});
-
-leaderRouter.post('/:leaderId', (request, response, next) => {
+leaderRouter.route('/:leaderId').get((request, response, next) => {
+    Leaders.findById(request.params.leaderId).then((leader) => {
+        response.json(leader);
+    }, (err) => {
+        next(err);
+    }).catch((err) => {
+        next(err);
+    });
+}).post((request, response, next) => {
     response.statusCode = 403;
-    response.end('POST no tiene soporte para el lider ' + request.params.leaderId);
-});
-
-leaderRouter.put('/:leaderId', (request, response, next) => {
-    response.write('Modificando el lider: ' + request.params.leaderId + '\n');
-    response.end('Se modificará el lider: ' + request.body.name + ' con descripcion: ' + request.body.description);
-});
-
-leaderRouter.delete('/:leaderId', (request, response, next) => {
-    response.end('Borrando lider ' + request.params.leaderId);
+    response.end('POST no tiene soporte para /leaders/ ' + request.params.leaderId);
+}).put((request, response, next) => {
+    Leaders.findByIdAndUpdate(request.params.leaderId, {
+        $set: request.body,
+    }, {new: true}).then((leader) => {
+        response.json(leader);
+    }, (err) => {
+        next(err);
+    }).catch((err) => {
+        next(err);
+    });
+}).delete((request, response, next) => {
+    Leaders.findByIdAndRemove(request.params.leaderId).then((resp) => {
+        response.json(resp);
+    }, (err) => {
+        next(err);
+    }).catch((err) => {
+        next(err);    
+    });
 });
 
 module.exports = leaderRouter;

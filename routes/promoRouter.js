@@ -1,5 +1,7 @@
 const express = require('express');
-const bodyParser = require('body-parser'); 
+const bodyParser = require('body-parser');
+
+const Promotions = require('../models/promotions');
 
 const promoRouter = express.Router();
 promoRouter.use(bodyParser.json());
@@ -9,32 +11,65 @@ promoRouter.route('/').all((request, response, next) => {
     response.setHeader('ContentType', 'text/plain');
     next();
 }).get((request, response, next) => {
-    response.end('Se enviarán todas las promociones.');
+    Promotions.find({}).then((promos) => {
+        response.json(promos);
+    }, (err) => {
+        next(err);
+    }).catch((err) => {
+        next(err);
+    });
 }).post((request, response, next) => {
-    response.end('Se agregará una nueva promocion: ' + request.body.name + ' con descripcion: ' + request.body.description);
+    Promotions.create(request.body).then((promo) => {
+        console.log('Promo creada', promo)
+        response.statusCode = 201;
+        response.json(promo);
+    }, (err) => {
+        next(err);
+    }).catch((err) => {
+        next(err);
+    });
 }).put((request, response, next) => {
     response.statusCode = 403;
-    response.end('PUT no tiene soporte para las promociones');
+    response.end('PUT no tiene soporte para /promotions');
 }).delete((request, response, next) => {
-    response.end('Se borrarán todas las promociones.');
+    Promotions.deleteMany({}).then((resp) => {
+        response.json(resp);
+    }, (err) => {
+        next(err);
+    }).catch((err) => {
+        next(err);
+    });
 })
 
-promoRouter.get('/:promoId', (request, response, next) => {
-    response.end('Se enviarán detalles de la promocion ' + request.params.promoId);
-});
-
-promoRouter.post('/:promoId', (request, response, next) => {
+promoRouter.route('/:promoId').get((request, response, next) => {
+    Promotions.findById(request.params.promoId).then((promo) => {
+        response.json(promo);
+    }, (err) => {
+        next(err);
+    }).catch((err) => {
+        next(err);
+    });
+}).post((request, response, next) => {
     response.statusCode = 403;
-    response.end('POST no tiene soporte para la promocion ' + request.params.promoId);
-});
-
-promoRouter.put('/:promoId', (request, response, next) => {
-    response.write('Modificando la promocion: ' + request.params.promoId + '\n');
-    response.end('Se modificará la promocion: ' + request.body.name + ' con descripcion: ' + request.body.description);
-});
-
-promoRouter.delete('/:promoId', (request, response, next) => {
-    response.end('Borrando promocion ' + request.params.promoId);
+    response.end('POST no tiene soporte para /promotions/ ' + request.params.promoId);
+}).put((request, response, next) => {
+    Promotions.findByIdAndUpdate(request.params.promoId, {
+        $set: request.body,
+    }, {new: true}).then((promo) => {
+        response.json(promo);
+    }, (err) => {
+        next(err);
+    }).catch((err) => {
+        next(err);
+    });
+}).delete((request, response, next) => {
+    Promotions.findByIdAndRemove(request.params.promoId).then((resp) => {
+        response.json(resp);
+    }, (err) => {
+        next(err);
+    }).catch((err) => {
+        next(err);    
+    });
 });
 
 module.exports = promoRouter;
