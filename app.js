@@ -31,6 +31,35 @@ app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
+
+function auth(request, response, next) {
+  console.log(request.headers);
+
+  function sendAuthError(next, message) {
+    var err = new Error(message);
+    response.setHeader('WWW-Authenticate', 'Basic');
+    err.status = 401;
+    return next(err);
+  }
+
+  var authHeader = request.headers.authorization;
+  if (!authHeader) {
+    return sendAuthError(next, 'No se ha autenticado!!');
+  }
+
+  var auth = new Buffer.from(authHeader.split(' ')[1], 'base64').toString().split(':');
+  var user = auth[0];
+  var pass = auth[1];
+
+  if (user === 'admin' && pass === 'password') {
+    next();
+  } else {
+    return sendAuthError(next, 'Usuario o clave incorrectos!!');
+  }
+
+}
+
+app.use(auth);
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
