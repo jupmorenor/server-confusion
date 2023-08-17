@@ -3,6 +3,8 @@ const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
+const session = require('express-session');
+const FileStore = require('session-file-store')(session);
 
 const indexRouter = require('./routes/index');
 const users = require('./routes/users');
@@ -30,10 +32,17 @@ app.set('view engine', 'jade');
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser('asdfghjkl-qwertyuiop-zxcvbnm-135792468'));
+//app.use(cookieParser('asdfghjkl-qwertyuiop-zxcvbnm-135792468'));
+app.use(session({
+  name: 'session-id',
+  secret: 'asdfghjkl-qwertyuiop-zxcvbnm-135792468',
+  saveUninitialized: false,
+  resave: false,
+  store: new FileStore(),
+}));
 
 function auth(request, response, next) {
-  console.log(request.signedCookies);
+  console.log(request.session);
 
   function sendAuthError(next, message) {
     var err = new Error(message);
@@ -42,7 +51,7 @@ function auth(request, response, next) {
     return next(err);
   }
 
-  if (!request.signedCookies.user) {
+  if (!request.session.user) {
     var authHeader = request.headers.authorization;
     if (!authHeader) {
       return sendAuthError(next, 'No se ha autenticado!!');
@@ -53,13 +62,14 @@ function auth(request, response, next) {
     var pass = auth[1];
   
     if (user === 'admin' && pass === 'password') {
-      response.cookie('user', 'admin', {signed: true})
+      // response.cookie('user', 'admin', {signed: true})
+      request.session.user = 'admin';
       next();
     } else {
       return sendAuthError(next, 'Usuario o clave incorrectos!!');
     }
   } else {
-    if (request.signedCookies.user === 'admin') {
+    if (request.session.user === 'admin') {
       next();
     } else {
       return sendAuthError(next, 'No tiene permiso para acceder!!');
