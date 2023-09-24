@@ -41,35 +41,22 @@ app.use(session({
   store: new FileStore(),
 }));
 
+app.use('/', indexRouter);
+app.use('/users', users);
+
 function auth(request, response, next) {
   console.log(request.session);
 
   function sendAuthError(next, message) {
     var err = new Error(message);
-    response.setHeader('WWW-Authenticate', 'Basic');
     err.status = 401;
     return next(err);
   }
 
   if (!request.session.user) {
-    var authHeader = request.headers.authorization;
-    if (!authHeader) {
-      return sendAuthError(next, 'No se ha autenticado!!');
-    }
-  
-    var auth = new Buffer.from(authHeader.split(' ')[1], 'base64').toString().split(':');
-    var user = auth[0];
-    var pass = auth[1];
-  
-    if (user === 'admin' && pass === 'password') {
-      // response.cookie('user', 'admin', {signed: true})
-      request.session.user = 'admin';
-      next();
-    } else {
-      return sendAuthError(next, 'Usuario o clave incorrectos!!');
-    }
+    return sendAuthError(next, 'No se ha autenticado!!');
   } else {
-    if (request.session.user === 'admin') {
+    if (request.session.user === 'authenticated') {
       next();
     } else {
       return sendAuthError(next, 'No tiene permiso para acceder!!');
@@ -81,8 +68,6 @@ function auth(request, response, next) {
 app.use(auth);
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/', indexRouter);
-app.use('/users', users);
 app.use('/dishes', dishRouter);
 app.use('/promotions', promoRouter);
 app.use('/leaders', leaderRouter);
