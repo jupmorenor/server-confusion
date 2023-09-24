@@ -1,15 +1,16 @@
 const express = require('express');
 const bodyParser = require('body-parser');
+const passport = require('passport');
 
-const Users = require('../models/user');
+const User = require('../models/user');
 
 const router = express.Router();
 router.use(bodyParser.json());
 
-const sendAuthError = (next, message) => {
+const sendAuthError = (next, message, code) => {
   var err = new Error(message);
   response.setHeader('WWW-Authenticate', 'Basic');
-  err.status = 401;
+  err.status = code;
   return next(err);
 }
 
@@ -19,60 +20,26 @@ router.get('/', function(req, res, next) {
 });
 
 router.post('/signup', (request, response, next) => {
-  Users.findOne({username: request.body.username}).then((user) => {
-    if (user !== null) {
-      var err = new Error(`El usuario ${request.body.username} ya existe`);
-      err.status = 401;
-      next(err);
+  User.register(new User({username: request.body.username}), request.body.password, (err, user) => {
+    if (err) {
+      response.statusCode = 500;
+      response.setHeader('ContentType', 'Application/json');
+      response.json({err: err});
     } else {
-      return Users.create({
-        username: request.body.username,
-        password: request.body.password,
+      passport.authenticate('local')(request, response, () => {
+        response.statusCode = 201;
+        response.setHeader('ContentType', 'Application/json');
+        response.json({status: 'Registro exitoso', success: true});
       });
     }
-  }).then((user) => {
-    response.statusCode = 201;
-    response.setHeader('ContentType', 'Application/json');
-    response.json({status: 'Registro exitoso', user: user});
-  }, (err) => {
-    next(err);
-  }).catch((err) => {
-    next(err);
   });
 });
 
-router.post('/login', (request, response, next) => {
+router.post('/login', passport.authenticate('local'), (request, response) => {
+  response.statusCode = 201;
+  response.setHeader('ContentType', 'Application/json');
+  response.json({status: 'Ha sido autenticado', success: true});
 
-  if (!request.session.user) {
-    var authHeader = request.headers.authorization;
-    if (!authHeader) {
-      return sendAuthError(next, 'No se ha autenticado!!');
-    }
-  
-    var auth = new Buffer.from(authHeader.split(' ')[1], 'base64').toString().split(':');
-    var username = auth[0];
-    var pass = auth[1];
-  
-    Users.findOne({username: username}).then((user) => {
-      if (user === null) {
-        return sendAuthError(next, 'Usuario ' + username + ' no existe!!');
-      } else if (user.password !== pass) {
-        return sendAuthError(next, 'Contraseña incorrecta!!');
-      } else if (user.username === username && user.password === pass) {
-        // response.cookie('user', 'admin', {signed: true})
-        request.session.user = 'authenticated';
-        response.statusCode = 200;
-        response.setHeader('ContentType', 'text/plain');
-        response.end('Ha sido autenticado');
-      }
-    }).catch((err) => {
-      next(err);
-    })
-  } else {
-    response.statusCode = 200;
-    response.setHeader('ContentType', 'text/plain');
-    response.end('Ya se encontraba autenticado');
-  }
 });
 
 router.get('/logout', (request, response, next) =>{
@@ -81,7 +48,7 @@ router.get('/logout', (request, response, next) =>{
     response.clearCookie('session-id');
     response.redirect('/');
   } else {
-    return sendAuthError(next, 'No se encuentra autenticado');
+    return sendAuthError(next, 'No se encuentra autenticado', 401);
   }
 });
 

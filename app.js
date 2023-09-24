@@ -5,7 +5,9 @@ const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const session = require('express-session');
 const FileStore = require('session-file-store')(session);
+const passport = require('passport');
 
+const authenticate = require('./authenticate');
 const indexRouter = require('./routes/index');
 const users = require('./routes/users');
 const dishRouter = require('./routes/dishRouter');
@@ -41,6 +43,9 @@ app.use(session({
   store: new FileStore(),
 }));
 
+app.use(passport.initialize());
+app.use(passport.session());
+
 app.use('/', indexRouter);
 app.use('/users', users);
 
@@ -53,16 +58,11 @@ function auth(request, response, next) {
     return next(err);
   }
 
-  if (!request.session.user) {
+  if (!request.user) {
     return sendAuthError(next, 'No se ha autenticado!!');
   } else {
-    if (request.session.user === 'authenticated') {
-      next();
-    } else {
-      return sendAuthError(next, 'No tiene permiso para acceder!!');
-    }
+    next();
   }
-
 }
 
 app.use(auth);
