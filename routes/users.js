@@ -3,6 +3,7 @@ const bodyParser = require('body-parser');
 const passport = require('passport');
 
 const User = require('../models/user');
+const authenticate = require('../authenticate');
 
 const router = express.Router();
 router.use(bodyParser.json());
@@ -36,9 +37,11 @@ router.post('/signup', (request, response, next) => {
 });
 
 router.post('/login', passport.authenticate('local'), (request, response) => {
+  const token = authenticate.getToken({_id: request.user._id})
+
   response.statusCode = 201;
   response.setHeader('ContentType', 'Application/json');
-  response.json({status: 'Ha sido autenticado', success: true});
+  response.json({status: 'Ha sido autenticado', success: true, token: token});
 
 });
 

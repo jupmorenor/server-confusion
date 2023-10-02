@@ -3,11 +3,12 @@ const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
-const session = require('express-session');
-const FileStore = require('session-file-store')(session);
+//const session = require('express-session');
+//const FileStore = require('session-file-store')(session);
 const passport = require('passport');
 
 const authenticate = require('./authenticate');
+const config = require('./config');
 const indexRouter = require('./routes/index');
 const users = require('./routes/users');
 const dishRouter = require('./routes/dishRouter');
@@ -16,8 +17,7 @@ const leaderRouter = require('./routes/leaderRouter');
 
 const mongoose = require('mongoose');
 
-const url = 'mongodb://localhost:27017/conFusion';
-const connect = mongoose.connect(url);
+const connect = mongoose.connect(config.mongoUrl);
 
 connect.then((db) => {
   console.log('Conectado correctamente.');
@@ -35,20 +35,23 @@ app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 //app.use(cookieParser('asdfghjkl-qwertyuiop-zxcvbnm-135792468'));
+/*
 app.use(session({
   name: 'session-id',
-  secret: 'asdfghjkl-qwertyuiop-zxcvbnm-135792468',
+  secret: config.secretKey,
   saveUninitialized: false,
   resave: false,
   store: new FileStore(),
 }));
+*/
 
 app.use(passport.initialize());
-app.use(passport.session());
+//app.use(passport.session());
 
 app.use('/', indexRouter);
 app.use('/users', users);
 
+/* 
 function auth(request, response, next) {
   console.log(request.session);
 
@@ -66,6 +69,7 @@ function auth(request, response, next) {
 }
 
 app.use(auth);
+ */
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/dishes', dishRouter);

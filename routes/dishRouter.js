@@ -3,6 +3,7 @@ const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 
 const Dishes = require('../models/dishes');
+const authenticate = require('../authenticate');
 
 const dishRouter = express.Router();
 dishRouter.use(bodyParser.json());
@@ -19,7 +20,7 @@ dishRouter.route('/').all((request, response, next) => {
     }).catch((err) => {
         next(err);
     });
-}).post((request, response, next) => {
+}).post(authenticate.verifyUser, (request, response, next) => {
     Dishes.create(request.body).then((dish) => {
         console.log('Dish creado', dish)
         response.statusCode = 201;
@@ -29,10 +30,10 @@ dishRouter.route('/').all((request, response, next) => {
     }).catch((err) => {
         next(err);    
     });
-}).put((request, response, next) => {
+}).put(authenticate.verifyUser, (request, response, next) => {
     response.statusCode = 403;
     response.end('PUT no tiene soporte para /dishes');
-}).delete((request, response, next) => {
+}).delete(authenticate.verifyUser, (request, response, next) => {
     Dishes.deleteMany({}).then((resp) => {
         response.json(resp);
     }, (err) => {
@@ -50,10 +51,10 @@ dishRouter.route('/:dishId').get((request, response, next) => {
     }).catch((err) => {
         next(err);
     });
-}).post((request, response, next) => {
+}).post(authenticate.verifyUser, (request, response, next) => {
     response.statusCode = 403;
     response.end('POST no tiene soporte para /dishes/ ' + request.params.dishId);
-}).put((request, response, next) => {
+}).put(authenticate.verifyUser, (request, response, next) => {
     Dishes.findByIdAndUpdate(request.params.dishId, {
         $set: request.body,
     }, {new: true}).then((dish) => {
@@ -63,7 +64,7 @@ dishRouter.route('/:dishId').get((request, response, next) => {
     }).catch((err) => {
         next(err);
     });
-}).delete((request, response, next) => {
+}).delete(authenticate.verifyUser, (request, response, next) => {
     Dishes.findByIdAndRemove(request.params.dishId).then((resp) => {
         response.json(resp);
     }, (err) => {
@@ -87,7 +88,7 @@ dishRouter.route('/:dishId/comments').get((request, response, next) => {
     }).catch((err) => {
         next(err);
     });
-}).post((request, response, next) => {
+}).post(authenticate.verifyUser, (request, response, next) => {
     Dishes.findById(request.params.dishId).then((dish) => {
         if (dish !== null) {
             dish.comments.push(request.body);
@@ -105,10 +106,10 @@ dishRouter.route('/:dishId/comments').get((request, response, next) => {
     }).catch((err) => {
         next(err);    
     });
-}).put((request, response, next) => {
+}).put(authenticate.verifyUser, (request, response, next) => {
     response.statusCode = 403;
     response.end('PUT no tiene soporte para /dishes/' + request.params.dishId + '/comments');
-}).delete((request, response, next) => {
+}).delete(authenticate.verifyUser, (request, response, next) => {
     Dishes.findById(request.params.dishId).then((dish) => {
         if (dish !== null) {
             for (let i = dish.comments.length-1; i >= 0; i--) {
@@ -147,10 +148,10 @@ dishRouter.route('/:dishId/comments/:commentId').get((request, response, next) =
     }).catch((err) => {
         next(err);
     });
-}).post((request, response, next) => {
+}).post(authenticate.verifyUser, (request, response, next) => {
     response.statusCode = 403;
     response.end('POST no tiene soporte para /dishes/ ' + request.params.dishId + "/comments/" + request.params.commentId);
-}).put((request, response, next) => {
+}).put(authenticate.verifyUser, (request, response, next) => {
     Dishes.findById(request.params.dishId).then((dish) => {
         if (dish !== null && dish.comments.id(request.params.commentId) !== null) {
             if (request.body.rating) {
@@ -176,7 +177,7 @@ dishRouter.route('/:dishId/comments/:commentId').get((request, response, next) =
     }).catch((err) => {
         next(err);
     });
-}).delete((request, response, next) => {
+}).delete(authenticate.verifyUser, (request, response, next) => {
     Dishes.findById(request.params.dishId).then((dish) => {
         if (dish !== null && dish.comments.id(request.params.commentId) !== null) {
             dish.comments.id(request.params.commentId).deleteOne();
