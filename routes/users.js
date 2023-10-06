@@ -27,11 +27,25 @@ router.post('/signup', (request, response, next) => {
       response.setHeader('ContentType', 'Application/json');
       response.json({err: err});
     } else {
-      passport.authenticate('local')(request, response, () => {
-        response.statusCode = 201;
-        response.setHeader('ContentType', 'Application/json');
-        response.json({status: 'Registro exitoso', success: true});
-      });
+      if (request.body.firstname) {
+        user.firstname = request.body.firstname;
+      }
+      if (request.body.lastname) {
+        user.lastname = request.body.lastname;
+      }
+      user.save((err, user) => {
+        if (err) {
+          response.statusCode = 500;
+          response.setHeader('ContentType', 'Application/json');
+          response.json({err: err});
+        } else {
+          passport.authenticate('local')(request, response, () => {
+            response.statusCode = 201;
+            response.setHeader('ContentType', 'Application/json');
+            response.json({status: 'Registro exitoso', success: true});
+          });
+        }
+      })
     }
   });
 });
