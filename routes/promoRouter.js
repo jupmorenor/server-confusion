@@ -19,9 +19,8 @@ promoRouter.route('/').all((request, response, next) => {
     }).catch((err) => {
         next(err);
     });
-}).post(authenticate.verifyUser, (request, response, next) => {
+}).post(authenticate.verifyUser, authenticate.verifyAdmin, (request, response, next) => {
     Promotions.create(request.body).then((promo) => {
-        console.log('Promo creada', promo)
         response.statusCode = 201;
         response.json(promo);
     }, (err) => {
@@ -29,10 +28,10 @@ promoRouter.route('/').all((request, response, next) => {
     }).catch((err) => {
         next(err);
     });
-}).put(authenticate.verifyUser, (request, response, next) => {
+}).put(authenticate.verifyUser, authenticate.verifyAdmin, (request, response, next) => {
     response.statusCode = 403;
     response.end('PUT no tiene soporte para /promotions');
-}).delete(authenticate.verifyUser, (request, response, next) => {
+}).delete(authenticate.verifyUser, authenticate.verifyAdmin, (request, response, next) => {
     Promotions.deleteMany({}).then((resp) => {
         response.json(resp);
     }, (err) => {
@@ -50,10 +49,10 @@ promoRouter.route('/:promoId').get((request, response, next) => {
     }).catch((err) => {
         next(err);
     });
-}).post(authenticate.verifyUser, (request, response, next) => {
+}).post(authenticate.verifyUser, authenticate.verifyAdmin, (request, response, next) => {
     response.statusCode = 403;
     response.end('POST no tiene soporte para /promotions/ ' + request.params.promoId);
-}).put(authenticate.verifyUser, (request, response, next) => {
+}).put(authenticate.verifyUser, authenticate.verifyAdmin, (request, response, next) => {
     Promotions.findByIdAndUpdate(request.params.promoId, {
         $set: request.body,
     }, {new: true}).then((promo) => {
@@ -63,7 +62,7 @@ promoRouter.route('/:promoId').get((request, response, next) => {
     }).catch((err) => {
         next(err);
     });
-}).delete(authenticate.verifyUser, (request, response, next) => {
+}).delete(authenticate.verifyUser, authenticate.verifyAdmin, (request, response, next) => {
     Promotions.findByIdAndRemove(request.params.promoId).then((resp) => {
         response.json(resp);
     }, (err) => {

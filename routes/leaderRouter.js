@@ -19,9 +19,8 @@ leaderRouter.route('/').all((request, response, next) => {
     }).catch((err) => {
         next(err);
     });
-}).post(authenticate.verifyUser, (request, response, next) => {
+}).post(authenticate.verifyUser, authenticate.verifyAdmin, (request, response, next) => {
     Leaders.create(request.body).then((leader) => {
-        console.log('leader creada', leader)
         response.statusCode = 201;
         response.json(leader);
     }, (err) => {
@@ -29,10 +28,10 @@ leaderRouter.route('/').all((request, response, next) => {
     }).catch((err) => {
         next(err);
     });
-}).put(authenticate.verifyUser, (request, response, next) => {
+}).put(authenticate.verifyUser, authenticate.verifyAdmin, (request, response, next) => {
     response.statusCode = 403;
     response.end('PUT no tiene soporte para /leaders');
-}).delete(authenticate.verifyUser, (request, response, next) => {
+}).delete(authenticate.verifyUser, authenticate.verifyAdmin, (request, response, next) => {
     Leaders.deleteMany({}).then((resp) => {
         response.json(resp);
     }, (err) => {
@@ -50,10 +49,10 @@ leaderRouter.route('/:leaderId').get((request, response, next) => {
     }).catch((err) => {
         next(err);
     });
-}).post(authenticate.verifyUser, (request, response, next) => {
+}).post(authenticate.verifyUser, authenticate.verifyAdmin, (request, response, next) => {
     response.statusCode = 403;
     response.end('POST no tiene soporte para /leaders/ ' + request.params.leaderId);
-}).put(authenticate.verifyUser, (request, response, next) => {
+}).put(authenticate.verifyUser, authenticate.verifyAdmin, (request, response, next) => {
     Leaders.findByIdAndUpdate(request.params.leaderId, {
         $set: request.body,
     }, {new: true}).then((leader) => {
@@ -63,7 +62,7 @@ leaderRouter.route('/:leaderId').get((request, response, next) => {
     }).catch((err) => {
         next(err);
     });
-}).delete(authenticate.verifyUser, (request, response, next) => {
+}).delete(authenticate.verifyUser, authenticate.verifyAdmin, (request, response, next) => {
     Leaders.findByIdAndRemove(request.params.leaderId).then((resp) => {
         response.json(resp);
     }, (err) => {
