@@ -27,6 +27,14 @@ connect.then((db) => {
 
 var app = express();
 
+app.all('*', (request, response, next) => {
+  if (request.secure) {
+    return next();
+  } else {
+    response.redirect(307, 'https://' + request.hostname + ":" + app.get('secureport') + request.url);
+  }
+});
+
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
