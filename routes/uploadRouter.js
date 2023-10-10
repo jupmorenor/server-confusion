@@ -2,6 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const multer = require('multer');
 const authenticate = require('../authenticate');
+const cors = require('./cors');
 
 const storage = multer.diskStorage({
     destination: (request, file, next) => {
@@ -31,15 +32,17 @@ uploadRouter.route('/').all((request, response, next) => {
     response.statusCode = 200;
     response.setHeader('ContentType', 'application/json');
     next();
-}).get(authenticate.verifyUser, authenticate.verifyAdmin, (request, response, next) => {
+}).options(cors.corsWithOptions, (req, res) => { 
+    res.sendStatus(200)
+}).get(cors.cors, authenticate.verifyUser, authenticate.verifyAdmin, (request, response, next) => {
     response.statusCode = 403;
     response.end('GET no tiene soporte para /imageUpload');
-}).post(authenticate.verifyUser, authenticate.verifyAdmin, upload.single('imageFile'), (request, response) => {
+}).post(cors.corsWithOptions, authenticate.verifyUser, authenticate.verifyAdmin, upload.single('imageFile'), (request, response) => {
     response.json(request.file);
-}).put(authenticate.verifyUser, authenticate.verifyAdmin, (request, response, next) => {
+}).put(cors.corsWithOptions, authenticate.verifyUser, authenticate.verifyAdmin, (request, response, next) => {
     response.statusCode = 403;
     response.end('PUT no tiene soporte para /imageUpload');
-}).delete(authenticate.verifyUser, authenticate.verifyAdmin, (request, response, next) => {
+}).delete(cors.corsWithOptions, authenticate.verifyUser, authenticate.verifyAdmin, (request, response, next) => {
     response.statusCode = 403;
     response.end('DELETE no tiene soporte para /imageUpload');
 })

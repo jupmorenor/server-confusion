@@ -1,7 +1,6 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const mongoose = require('mongoose');
-
+const cors = require('./cors');
 const Dishes = require('../models/dishes');
 const authenticate = require('../authenticate');
 
@@ -12,7 +11,8 @@ dishRouter.route('/').all((request, response, next) => {
     response.statusCode = 200;
     response.setHeader('ContentType', 'application/json');
     next();
-}).get((request, response, next) => {
+}).options(cors.corsWithOptions, (req, res) => { res.sendStatus(200) })
+.get(cors.cors, (request, response, next) => {
     Dishes.find({}).populate('comments.author')
     .then((dishes) => {
         response.json(dishes);
@@ -21,7 +21,7 @@ dishRouter.route('/').all((request, response, next) => {
     }).catch((err) => {
         next(err);
     });
-}).post(authenticate.verifyUser, authenticate.verifyAdmin, (request, response, next) => {
+}).post(cors.corsWithOptions, authenticate.verifyUser, authenticate.verifyAdmin, (request, response, next) => {
     Dishes.create(request.body).then((dish) => {
         response.statusCode = 201;
         response.json(dish);
@@ -30,10 +30,10 @@ dishRouter.route('/').all((request, response, next) => {
     }).catch((err) => {
         next(err);    
     });
-}).put(authenticate.verifyUser, authenticate.verifyAdmin, (request, response, next) => {
+}).put(cors.corsWithOptions, authenticate.verifyUser, authenticate.verifyAdmin, (request, response, next) => {
     response.statusCode = 403;
     response.end('PUT no tiene soporte para /dishes');
-}).delete(authenticate.verifyUser, authenticate.verifyAdmin, (request, response, next) => {
+}).delete(cors.corsWithOptions, authenticate.verifyUser, authenticate.verifyAdmin, (request, response, next) => {
     Dishes.deleteMany({}).then((resp) => {
         response.json(resp);
     }, (err) => {
@@ -43,7 +43,8 @@ dishRouter.route('/').all((request, response, next) => {
     });
 });
 
-dishRouter.route('/:dishId').get((request, response, next) => {
+dishRouter.route('/:dishId').options(cors.corsWithOptions, (req, res) => { res.sendStatus(200) })
+.get(cors.cors, (request, response, next) => {
     Dishes.findById(request.params.dishId).populate('comments.author')
     .then((dish) => {
         response.json(dish);
@@ -52,10 +53,10 @@ dishRouter.route('/:dishId').get((request, response, next) => {
     }).catch((err) => {
         next(err);
     });
-}).post(authenticate.verifyUser, authenticate.verifyAdmin, (request, response, next) => {
+}).post(cors.corsWithOptions, authenticate.verifyUser, authenticate.verifyAdmin, (request, response, next) => {
     response.statusCode = 403;
     response.end('POST no tiene soporte para /dishes/ ' + request.params.dishId);
-}).put(authenticate.verifyUser, authenticate.verifyAdmin, (request, response, next) => {
+}).put(cors.corsWithOptions, authenticate.verifyUser, authenticate.verifyAdmin, (request, response, next) => {
     Dishes.findByIdAndUpdate(request.params.dishId, {
         $set: request.body,
     }, {new: true}).then((dish) => {
@@ -65,7 +66,7 @@ dishRouter.route('/:dishId').get((request, response, next) => {
     }).catch((err) => {
         next(err);
     });
-}).delete(authenticate.verifyUser, authenticate.verifyAdmin, (request, response, next) => {
+}).delete(cors.corsWithOptions, authenticate.verifyUser, authenticate.verifyAdmin, (request, response, next) => {
     Dishes.findByIdAndRemove(request.params.dishId).then((resp) => {
         response.json(resp);
     }, (err) => {
@@ -75,7 +76,8 @@ dishRouter.route('/:dishId').get((request, response, next) => {
     });
 });
 
-dishRouter.route('/:dishId/comments').get((request, response, next) => {
+dishRouter.route('/:dishId/comments').options(cors.corsWithOptions, (req, res) => { res.sendStatus(200) })
+.get(cors.cors, (request, response, next) => {
     Dishes.findById(request.params.dishId).populate('comments.author')
     .then((dish) => {
         if (dish !== null) {
@@ -90,7 +92,7 @@ dishRouter.route('/:dishId/comments').get((request, response, next) => {
     }).catch((err) => {
         next(err);
     });
-}).post(authenticate.verifyUser, (request, response, next) => {
+}).post(cors.corsWithOptions, authenticate.verifyUser, (request, response, next) => {
     Dishes.findById(request.params.dishId).then((dish) => {
         if (dish !== null) {
             request.body.author = request.user._id;
@@ -111,10 +113,10 @@ dishRouter.route('/:dishId/comments').get((request, response, next) => {
     }).catch((err) => {
         next(err);    
     });
-}).put(authenticate.verifyUser, (request, response, next) => {
+}).put(cors.corsWithOptions, authenticate.verifyUser, (request, response, next) => {
     response.statusCode = 403;
     response.end('PUT no tiene soporte para /dishes/' + request.params.dishId + '/comments');
-}).delete(authenticate.verifyUser, authenticate.verifyAdmin, (request, response, next) => {
+}).delete(cors.corsWithOptions, authenticate.verifyUser, authenticate.verifyAdmin, (request, response, next) => {
     Dishes.findById(request.params.dishId).then((dish) => {
         if (dish !== null) {
             for (let i = dish.comments.length-1; i >= 0; i--) {
@@ -135,7 +137,8 @@ dishRouter.route('/:dishId/comments').get((request, response, next) => {
     });
 });
 
-dishRouter.route('/:dishId/comments/:commentId').get((request, response, next) => {
+dishRouter.route('/:dishId/comments/:commentId').options(cors.corsWithOptions, (req, res) => { res.sendStatus(200) })
+.get(cors.cors, (request, response, next) => {
     Dishes.findById(request.params.dishId).populate('comments.author')
     .then((dish) => {
         if (dish !== null && dish.comments.id(request.params.commentId) !== null) {
@@ -154,10 +157,10 @@ dishRouter.route('/:dishId/comments/:commentId').get((request, response, next) =
     }).catch((err) => {
         next(err);
     });
-}).post(authenticate.verifyUser, (request, response, next) => {
+}).post(cors.corsWithOptions, authenticate.verifyUser, (request, response, next) => {
     response.statusCode = 403;
     response.end('POST no tiene soporte para /dishes/ ' + request.params.dishId + "/comments/" + request.params.commentId);
-}).put(authenticate.verifyUser, (request, response, next) => {
+}).put(cors.corsWithOptions, authenticate.verifyUser, (request, response, next) => {
     Dishes.findById(request.params.dishId).then((dish) => {
         if (dish !== null && dish.comments.id(request.params.commentId) !== null) {
             if (dish.comments.id(request.params.commentId).author._id.equals(request.user._id)) {
@@ -191,7 +194,7 @@ dishRouter.route('/:dishId/comments/:commentId').get((request, response, next) =
     }).catch((err) => {
         next(err);
     });
-}).delete(authenticate.verifyUser, (request, response, next) => {
+}).delete(cors.corsWithOptions, authenticate.verifyUser, (request, response, next) => {
     Dishes.findById(request.params.dishId).then((dish) => {
         if (dish !== null && dish.comments.id(request.params.commentId) !== null) {
             if (dish.comments.id(request.params.commentId).author._id.equals(request.user._id)) {

@@ -1,6 +1,6 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-
+const cors = require('./cors');
 const Leaders = require('../models/leaders');
 const authenticate = require('../authenticate');
 
@@ -11,7 +11,8 @@ leaderRouter.route('/').all((request, response, next) => {
     response.statusCode = 200;
     response.setHeader('ContentType', 'text/plain');
     next();
-}).get((request, response, next) => {
+}).options(cors.corsWithOptions, (req, res) => { res.sendStatus(200) })
+.get(cors.cors, (request, response, next) => {
     Leaders.find({}).then((leaders) => {
         response.json(leaders);
     }, (err) => {
@@ -19,7 +20,7 @@ leaderRouter.route('/').all((request, response, next) => {
     }).catch((err) => {
         next(err);
     });
-}).post(authenticate.verifyUser, authenticate.verifyAdmin, (request, response, next) => {
+}).post(cors.corsWithOptions, authenticate.verifyUser, authenticate.verifyAdmin, (request, response, next) => {
     Leaders.create(request.body).then((leader) => {
         response.statusCode = 201;
         response.json(leader);
@@ -28,10 +29,10 @@ leaderRouter.route('/').all((request, response, next) => {
     }).catch((err) => {
         next(err);
     });
-}).put(authenticate.verifyUser, authenticate.verifyAdmin, (request, response, next) => {
+}).put(cors.corsWithOptions, authenticate.verifyUser, authenticate.verifyAdmin, (request, response, next) => {
     response.statusCode = 403;
     response.end('PUT no tiene soporte para /leaders');
-}).delete(authenticate.verifyUser, authenticate.verifyAdmin, (request, response, next) => {
+}).delete(cors.corsWithOptions, authenticate.verifyUser, authenticate.verifyAdmin, (request, response, next) => {
     Leaders.deleteMany({}).then((resp) => {
         response.json(resp);
     }, (err) => {
@@ -41,7 +42,8 @@ leaderRouter.route('/').all((request, response, next) => {
     });
 })
 
-leaderRouter.route('/:leaderId').get((request, response, next) => {
+leaderRouter.route('/:leaderId').options(cors.corsWithOptions, (req, res) => { res.sendStatus(200) })
+.get(cors.cors, (request, response, next) => {
     Leaders.findById(request.params.leaderId).then((leader) => {
         response.json(leader);
     }, (err) => {
@@ -49,10 +51,10 @@ leaderRouter.route('/:leaderId').get((request, response, next) => {
     }).catch((err) => {
         next(err);
     });
-}).post(authenticate.verifyUser, authenticate.verifyAdmin, (request, response, next) => {
+}).post(cors.corsWithOptions, authenticate.verifyUser, authenticate.verifyAdmin, (request, response, next) => {
     response.statusCode = 403;
     response.end('POST no tiene soporte para /leaders/ ' + request.params.leaderId);
-}).put(authenticate.verifyUser, authenticate.verifyAdmin, (request, response, next) => {
+}).put(cors.corsWithOptions, authenticate.verifyUser, authenticate.verifyAdmin, (request, response, next) => {
     Leaders.findByIdAndUpdate(request.params.leaderId, {
         $set: request.body,
     }, {new: true}).then((leader) => {
@@ -62,7 +64,7 @@ leaderRouter.route('/:leaderId').get((request, response, next) => {
     }).catch((err) => {
         next(err);
     });
-}).delete(authenticate.verifyUser, authenticate.verifyAdmin, (request, response, next) => {
+}).delete(cors.corsWithOptions, authenticate.verifyUser, authenticate.verifyAdmin, (request, response, next) => {
     Leaders.findByIdAndRemove(request.params.leaderId).then((resp) => {
         response.json(resp);
     }, (err) => {
