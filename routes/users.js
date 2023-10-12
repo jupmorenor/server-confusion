@@ -58,7 +58,7 @@ userRouter.post('/signup', cors.corsWithOptions, (request, response, next) => {
 });
 
 userRouter.post('/login', cors.corsWithOptions, passport.authenticate('local'), (request, response) => {
-	const token = authenticate.getToken({ _id: request.user._id })
+	const token = authenticate.getToken({ _id: request.user._id });
 
 	response.statusCode = 201;
 	response.json({ status: 'Ha sido autenticado', success: true, token: token });
@@ -74,6 +74,13 @@ userRouter.get('/logout', cors.corsWithOptions, (request, response, next) => {
 		response.setHeader('WWW-Authenticate', 'Basic');
 		return sendAuthError(next, 'No se encuentra autenticado', 401);
 	}
+});
+
+userRouter.get('facebook/token', cors.cors, passport.authenticate('facebook-token'), (request, response) => {
+	const token = authenticate.getToken({ _id: request.user._id });
+
+	response.statusCode = 201;
+	response.json({ status: 'Ha sido autenticado con facebook', success: true, token: token });
 });
 
 module.exports = userRouter;
